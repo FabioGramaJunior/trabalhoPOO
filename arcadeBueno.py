@@ -6,6 +6,8 @@ ALTURA = 600
 LARGURA = 800
 TITULO = "AURA"
 
+PONTOS_PARA_VENCER = 20
+
 
 # ============================================================
 # SPRITES DO JOGO
@@ -37,7 +39,7 @@ class Player(arcade.Sprite):
 
 class Moeda(arcade.Sprite):
     def __init__(self):
-        super().__init__("moeda.png", scale=0.5)
+        super().__init__("moeda.png", scale=0.1)
         self.center_x = random.randint(20, LARGURA - 20)
         self.center_y = random.randint(20, ALTURA - 20)
 
@@ -62,9 +64,11 @@ class MoedaEspecial(arcade.Sprite):
 
 class Inimigo(arcade.Sprite):
     def __init__(self):
-        super().__init__("personagem_inimigo_direita.png", scale=0.5)
-        self.textura_direita = arcade.load_texture("personagem_inimigo_direita.png")
-        self.textura_esquerda = arcade.load_texture("personagem_inimigo_esquerda.png")
+        super().__init__("personagem_inimigo_direita.png", scale=0.1)
+        self.textura_direita = arcade.load_texture(
+            "personagem_inimigo_direita.png")
+        self.textura_esquerda = arcade.load_texture(
+            "personagem_inimigo_esquerda.png")
 
         self.center_x = random.randint(20, LARGURA - 20)
         self.center_y = random.randint(20, ALTURA - 20)
@@ -88,7 +92,7 @@ class Inimigo(arcade.Sprite):
 
 class InimigoEspecial(arcade.Sprite):
     def __init__(self):
-        super().__init__("inimigo_especial.png", scale=0.5)
+        super().__init__("inimigo_especial.png", scale=0.20)
         self.center_x = random.randint(20, LARGURA - 20)
         self.center_y = random.randint(20, ALTURA - 20)
         self.velocidade = 1.5
@@ -120,16 +124,16 @@ class MenuView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text(TITULO, LARGURA / 2, ALTURA - 150,
-                          arcade.color.WHITE, 50, anchor_x="center", bold=True)
+                         arcade.color.WHITE, 50, anchor_x="center", bold=True)
 
         arcade.draw_text("[J] Jogar", LARGURA / 2, ALTURA / 2 + 40,
-                          arcade.color.YELLOW, 24, anchor_x="center")
+                         arcade.color.YELLOW, 24, anchor_x="center")
         arcade.draw_text("[I] Instruções", LARGURA / 2, ALTURA / 2,
-                          arcade.color.YELLOW, 24, anchor_x="center")
+                         arcade.color.YELLOW, 24, anchor_x="center")
         arcade.draw_text("[S] Sobre o Jogo", LARGURA / 2, ALTURA / 2 - 40,
-                          arcade.color.YELLOW, 24, anchor_x="center")
+                         arcade.color.YELLOW, 24, anchor_x="center")
         arcade.draw_text("[ESC] Sair", LARGURA / 2, ALTURA / 2 - 80,
-                          arcade.color.YELLOW, 24, anchor_x="center")
+                         arcade.color.YELLOW, 24, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.J:
@@ -154,28 +158,46 @@ class InstrucoesView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text("INSTRUÇÕES", LARGURA / 2, ALTURA - 50,
-                          arcade.color.WHITE, 32, anchor_x="center", bold=True)
+                         arcade.color.WHITE, 32, anchor_x="center", bold=True)
 
-        texto = (
-            "Objetivo: os dois jogadores cooperam para coletar\n"
-            "todas as moedas do mapa e vencer juntos.\n\n"
-            "- Moedas normais: +1 ponto (somem ao serem coletadas)\n"
-            "- Moedas especiais: +5 pontos, movem-se e rebatem nas bordas\n"
-            "- Inimigos comuns: -1 ponto ao encostar, ficam vagando sempre\n"
-            "- Inimigos especiais: -1 ponto, perseguem os jogadores (mais lentos)\n"
-            "  e reaparecem em outro lugar do mapa ao tocar alguém\n\n"
-            "Controles Jogador 1:\n"
-            "W A S D - mover para cima/esquerda/baixo/direita\n\n"
-            "Controles Jogador 2:\n"
-            "I J K L - mover para cima/esquerda/baixo/direita\n"
+        arcade.draw_text(
+            "Objetivo: cooperem para coletar todas as moedas do mapa.",
+            LARGURA / 2, ALTURA - 110,
+            arcade.color.WHITE, 16, anchor_x="center"
+        )
+        arcade.draw_text(
+            f"Pontuação final >= {PONTOS_PARA_VENCER}: VITÓRIA!   |   "
+            f"Abaixo de {PONTOS_PARA_VENCER}: GAME OVER",
+            LARGURA / 2, ALTURA - 135,
+            arcade.color.YELLOW_GREEN, 15, anchor_x="center"
         )
 
-        arcade.draw_text(texto, LARGURA / 2, ALTURA / 2 + 20,
-                          arcade.color.WHITE, 15, anchor_x="center",
-                          align="center", width=700, multiline=True)
+        texto = (
+            "- Moeda normal: +1 ponto (some ao ser coletada)\n"
+            "- Moeda especial: +5 pontos (move-se e rebate nas bordas)\n"
+            "- Inimigo comum: -1 ponto ao encostar (fica vagando sempre)\n"
+            "- Inimigo especial: -1 ponto, persegue os jogadores (mais lento)\n"
+            "  e reaparece em outro lugar do mapa ao tocar alguém"
+        )
+        arcade.draw_text(texto, LARGURA / 2, ALTURA - 175,
+                         arcade.color.WHITE, 15, anchor_x="center",
+                         align="center", width=700, multiline=True)
+
+        arcade.draw_text("Controles", LARGURA / 2, ALTURA - 320,
+                         arcade.color.WHITE, 18, anchor_x="center", bold=True)
+        arcade.draw_text(
+            "Jogador 1:  W A S D  (cima / esquerda / baixo / direita)",
+            LARGURA / 2, ALTURA - 350,
+            arcade.color.WHITE, 15, anchor_x="center"
+        )
+        arcade.draw_text(
+            "Jogador 2:  I J K L  (cima / esquerda / baixo / direita)",
+            LARGURA / 2, ALTURA - 375,
+            arcade.color.WHITE, 15, anchor_x="center"
+        )
 
         arcade.draw_text("[ESC] ou [M] - Voltar ao Menu", LARGURA / 2, 30,
-                          arcade.color.YELLOW, 18, anchor_x="center")
+                         arcade.color.YELLOW, 18, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.ESCAPE, arcade.key.M):
@@ -191,9 +213,9 @@ class SobreView(arcade.View):
         self.avatares = arcade.SpriteList()
 
         integrantes = [
-            {"nome": "Nome 1", "imagem": "avatar1.png"},
-            {"nome": "Nome 2", "imagem": "avatar2.png"},
-            {"nome": "Nome 3", "imagem": "avatar3.png"},
+            {"nome": "Gabriel Bueno", "imagem": "avatar1.png"},
+            {"nome": "Fábio Grama", "imagem": "avatar2.png"},
+            {"nome": "Fábio e Gabriel", "imagem": "avatar3.png"},
         ]
 
         espacamento = LARGURA / (len(integrantes) + 1)
@@ -203,7 +225,8 @@ class SobreView(arcade.View):
             avatar.center_x = espacamento * (i + 1)
             avatar.center_y = ALTURA / 2
             self.avatares.append(avatar)
-            self.nomes.append((pessoa["nome"], avatar.center_x, avatar.center_y - 90))
+            self.nomes.append(
+                (pessoa["nome"], avatar.center_x, avatar.center_y - 90))
 
     def on_show_view(self):
         arcade.set_background_color((50, 30, 60))
@@ -211,15 +234,16 @@ class SobreView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text("SOBRE O JOGO", LARGURA / 2, ALTURA - 60,
-                          arcade.color.WHITE, 36, anchor_x="center", bold=True)
+                         arcade.color.WHITE, 36, anchor_x="center", bold=True)
 
         self.avatares.draw()
 
         for nome, x, y in self.nomes:
-            arcade.draw_text(nome, x, y, arcade.color.WHITE, 18, anchor_x="center")
+            arcade.draw_text(nome, x, y, arcade.color.WHITE,
+                             18, anchor_x="center")
 
         arcade.draw_text("[ESC] ou [M] - Voltar ao Menu", LARGURA / 2, 40,
-                          arcade.color.YELLOW, 18, anchor_x="center")
+                         arcade.color.YELLOW, 18, anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         if key in (arcade.key.ESCAPE, arcade.key.M):
@@ -246,7 +270,7 @@ class GameView(arcade.View):
 
         # ---- Jogador 1 ----
         self.personagem = Player("personagem_cavaleiro_direita.png",
-                                  "personagem_cavaleiro_esquerda.png")
+                                 "personagem_cavaleiro_esquerda.png")
         self.personagem.center_x = 300
         self.personagem.center_y = 300
         self.sprite_jogador = arcade.SpriteList()
@@ -254,7 +278,7 @@ class GameView(arcade.View):
 
         # ---- Jogador 2 ----
         self.personagem2 = Player("personagem_cavaleiro2_direita.png",
-                                   "personagem_cavaleiro2_esquerda.png")
+                                  "personagem_cavaleiro2_esquerda.png")
         self.personagem2.center_x = 500
         self.personagem2.center_y = 300
         self.sprite_jogador2 = arcade.SpriteList()
@@ -283,7 +307,8 @@ class GameView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.draw_texture_rect(self.background, arcade.LBWH(0, 0, LARGURA, ALTURA))
+        arcade.draw_texture_rect(
+            self.background, arcade.LBWH(0, 0, LARGURA, ALTURA))
 
         self.moedas_lista.draw()
         self.moeda_especial_lista.draw()
@@ -293,11 +318,11 @@ class GameView(arcade.View):
         self.sprite_jogador2.draw()
 
         arcade.draw_text(f"Pontos: {self.pontos}", 10, ALTURA - 30,
-                          arcade.color.WHITE, 20)
+                         arcade.color.WHITE, 20)
 
         if self.alerta_timer > 0:
             arcade.draw_text("CUIDADO!", LARGURA / 2 - 60, ALTURA - 60,
-                              arcade.color.RED, 28, bold=True)
+                             arcade.color.RED, 28, bold=True)
 
     def on_update(self, delta_time):
         self.personagem.update(delta_time)
@@ -309,30 +334,33 @@ class GameView(arcade.View):
         # inimigo especial persegue o jogador mais próximo dele
         for inimigo_esp in self.inimigo_especial_lista:
             d1 = math.hypot(self.personagem.center_x - inimigo_esp.center_x,
-                             self.personagem.center_y - inimigo_esp.center_y)
+                            self.personagem.center_y - inimigo_esp.center_y)
             d2 = math.hypot(self.personagem2.center_x - inimigo_esp.center_x,
-                             self.personagem2.center_y - inimigo_esp.center_y)
+                            self.personagem2.center_y - inimigo_esp.center_y)
             alvo = self.personagem if d1 <= d2 else self.personagem2
             inimigo_esp.seguir(alvo.center_x, alvo.center_y)
         self.inimigo_especial_lista.update(delta_time)
 
         # --- colisões: moeda normal (qualquer jogador coleta) ---
         for jogador in (self.personagem, self.personagem2):
-            moedas_atingidas = arcade.check_for_collision_with_list(jogador, self.moedas_lista)
+            moedas_atingidas = arcade.check_for_collision_with_list(
+                jogador, self.moedas_lista)
             for moeda in moedas_atingidas:
                 moeda.remove_from_sprite_lists()
                 self.pontos += 1
 
         # --- moeda especial ---
         for jogador in (self.personagem, self.personagem2):
-            especiais_atingidas = arcade.check_for_collision_with_list(jogador, self.moeda_especial_lista)
+            especiais_atingidas = arcade.check_for_collision_with_list(
+                jogador, self.moeda_especial_lista)
             for m in especiais_atingidas:
                 m.remove_from_sprite_lists()
                 self.pontos += 5
 
         # --- inimigo comum (com cooldown separado por jogador) ---
         if self.cooldown_dano1 <= 0:
-            atingiu1 = arcade.check_for_collision_with_list(self.personagem, self.inimigos_lista)
+            atingiu1 = arcade.check_for_collision_with_list(
+                self.personagem, self.inimigos_lista)
             if atingiu1:
                 self.pontos -= 1
                 self.alerta_timer = 1.0
@@ -341,7 +369,8 @@ class GameView(arcade.View):
             self.cooldown_dano1 -= delta_time
 
         if self.cooldown_dano2 <= 0:
-            atingiu2 = arcade.check_for_collision_with_list(self.personagem2, self.inimigos_lista)
+            atingiu2 = arcade.check_for_collision_with_list(
+                self.personagem2, self.inimigos_lista)
             if atingiu2:
                 self.pontos -= 1
                 self.alerta_timer = 1.0
@@ -351,7 +380,8 @@ class GameView(arcade.View):
 
         # --- inimigo especial (teleporta ao tocar qualquer jogador) ---
         for jogador in (self.personagem, self.personagem2):
-            especiais_inimigo = arcade.check_for_collision_with_list(jogador, self.inimigo_especial_lista)
+            especiais_inimigo = arcade.check_for_collision_with_list(
+                jogador, self.inimigo_especial_lista)
             for ie in especiais_inimigo:
                 self.pontos -= 1
                 ie.reposicionar()
@@ -361,8 +391,10 @@ class GameView(arcade.View):
 
         # CONDIÇÃO DE FIM DE JOGO: coletaram todas as moedas
         if len(self.moedas_lista) == 0 and len(self.moeda_especial_lista) == 0:
-            game_over_view = GameOverView(self.pontos)
-            self.window.show_view(game_over_view)
+            if self.pontos >= PONTOS_PARA_VENCER:
+                self.window.show_view(VitoriaView(self.pontos))
+            else:
+                self.window.show_view(GameOverView(self.pontos))
 
     def on_key_press(self, key, modifiers):
         # Jogador 1: WASD
@@ -401,7 +433,38 @@ class GameView(arcade.View):
 
 
 # ============================================================
-# TELA 5: GAME OVER
+# TELA 5: VITÓRIA (pontuação >= PONTOS_PARA_VENCER)
+# ============================================================
+class VitoriaView(arcade.View):
+    def __init__(self, pontos_finais):
+        super().__init__()
+        self.pontos_finais = pontos_finais
+
+    def on_show_view(self):
+        arcade.set_background_color((10, 60, 20))
+
+    def on_draw(self):
+        self.clear()
+        arcade.draw_text("PARABÉNS! VOCÊS VENCERAM!", LARGURA / 2, ALTURA / 2 + 60,
+                         arcade.color.GREEN, 40, anchor_x="center", bold=True)
+        arcade.draw_text(f"Pontuação final: {self.pontos_finais}",
+                         LARGURA / 2, ALTURA / 2, arcade.color.WHITE, 24,
+                         anchor_x="center")
+        arcade.draw_text("[ENTER] Jogar novamente   [ESC] Menu",
+                         LARGURA / 2, ALTURA / 2 - 60, arcade.color.YELLOW, 18,
+                         anchor_x="center")
+
+    def on_key_press(self, key, modifiers):
+        if key == arcade.key.ENTER:
+            game_view = GameView()
+            game_view.setup()
+            self.window.show_view(game_view)
+        elif key == arcade.key.ESCAPE:
+            self.window.show_view(MenuView())
+
+
+# ============================================================
+# TELA 6: GAME OVER (pontuação < PONTOS_PARA_VENCER)
 # ============================================================
 class GameOverView(arcade.View):
     def __init__(self, pontos_finais):
@@ -414,13 +477,13 @@ class GameOverView(arcade.View):
     def on_draw(self):
         self.clear()
         arcade.draw_text("FIM DE JOGO", LARGURA / 2, ALTURA / 2 + 60,
-                          arcade.color.RED, 48, anchor_x="center", bold=True)
+                         arcade.color.RED, 48, anchor_x="center", bold=True)
         arcade.draw_text(f"Pontuação final: {self.pontos_finais}",
-                          LARGURA / 2, ALTURA / 2, arcade.color.WHITE, 24,
-                          anchor_x="center")
+                         LARGURA / 2, ALTURA / 2, arcade.color.WHITE, 24,
+                         anchor_x="center")
         arcade.draw_text("[ENTER] Jogar novamente   [ESC] Menu",
-                          LARGURA / 2, ALTURA / 2 - 60, arcade.color.YELLOW, 18,
-                          anchor_x="center")
+                         LARGURA / 2, ALTURA / 2 - 60, arcade.color.YELLOW, 18,
+                         anchor_x="center")
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
