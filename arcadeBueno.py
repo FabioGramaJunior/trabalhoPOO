@@ -138,7 +138,7 @@ class Player(arcade.Sprite):
 # ============================================================
 class Moeda(arcade.Sprite):
     def __init__(self, x, y):
-        super().__init__("moeda.png", scale=0.2)
+        super().__init__("moeda.png", scale=0.1)
         self.center_x = x
         self.center_y = y
 
@@ -163,7 +163,7 @@ class MoedaEspecial(arcade.Sprite):
 
 class Inimigo(arcade.Sprite):
     def __init__(self):
-        super().__init__("personagem_inimigo_direita.png", scale=0.2)
+        super().__init__("personagem_inimigo_direita.png", scale=0.1)
         self.textura_direita = arcade.load_texture("personagem_inimigo_direita.png")
         self.textura_esquerda = arcade.load_texture("personagem_inimigo_esquerda.png")
 
@@ -189,7 +189,7 @@ class Inimigo(arcade.Sprite):
 
 class InimigoEspecial(arcade.Sprite):
     def __init__(self):
-        super().__init__("inimigo_especial.png", scale=0.2)
+        super().__init__("inimigo_especial.png", scale=0.1)
         self.center_x = random.randint(20, LARGURA - 20)
         self.center_y = random.randint(100, ALTURA - 20)
         self.velocidade = 1.5
