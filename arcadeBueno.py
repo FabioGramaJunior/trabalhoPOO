@@ -20,6 +20,13 @@ SHEET_COLUNAS = 6
 SHEET_QUADROS = 6
 # Ordem esperada na folha: 0 = parado | 1 a 4 = caminhada | 5 = pulo
 
+# ---- Spritesheet da explosão ----
+EXPLOSAO_ARQUIVO = "explosao_spritesheet.png"
+EXPLOSAO_QUADRO = 64          # largura e altura de cada quadro
+EXPLOSAO_COLUNAS = 8
+EXPLOSAO_QUADROS = 8
+EXPLOSAO_TEMPO_QUADRO = 0.05  # segundos por quadro
+
 
 # ============================================================
 # BANCO DE DADOS (PEEWEE ORM)
@@ -118,7 +125,7 @@ class Player(arcade.Sprite):
             # 3) caminhando: troca de quadro a cada 100 ms
             self.tempo_animacao += delta_time
             if self.tempo_animacao >= 0.1:
-                self.tempo_animacao = 0
+                self.tempo_animacao -= 0.1
                 self.indice_quadro = (self.indice_quadro + 1) % len(self.tex_andando)
             lista = self.tex_andando if direita else self.tex_andando_esq
             self.texture = lista[self.indice_quadro]
@@ -131,6 +138,45 @@ class Player(arcade.Sprite):
         if self.top > ALTURA:
             self.top = ALTURA
             self.change_y = 0
+
+
+# ============================================================
+# EXPLOSÃO (animação que toca uma vez e some)
+# ============================================================
+_texturas_explosao = None
+
+
+def carregar_texturas_explosao():
+    """Carrega a folha só uma vez e reaproveita nas próximas explosões."""
+    global _texturas_explosao
+    if _texturas_explosao is None:
+        sheet = arcade.load_spritesheet(EXPLOSAO_ARQUIVO)
+        _texturas_explosao = sheet.get_texture_grid(
+            size=(EXPLOSAO_QUADRO, EXPLOSAO_QUADRO),
+            columns=EXPLOSAO_COLUNAS,
+            count=EXPLOSAO_QUADROS,
+        )
+    return _texturas_explosao
+
+
+class Explosao(arcade.Sprite):
+    def __init__(self, x, y):
+        self.texturas = carregar_texturas_explosao()
+        super().__init__(self.texturas[0], scale=1.0)
+        self.center_x = x
+        self.center_y = y
+        self.indice_quadro = 0
+        self.tempo_animacao = 0
+
+    def update(self, delta_time=1 / 60):
+        self.tempo_animacao += delta_time
+        if self.tempo_animacao >= EXPLOSAO_TEMPO_QUADRO:
+            self.tempo_animacao = 0
+            self.indice_quadro += 1
+            if self.indice_quadro >= len(self.texturas):
+                self.remove_from_sprite_lists()  # terminou: some da tela
+                return
+            self.texture = self.texturas[self.indice_quadro]
 
 
 # ============================================================
@@ -332,6 +378,7 @@ class GameView(arcade.View):
     def __init__(self):
         super().__init__()
         self.velocidade = 4
+        self.teclas = set()  # teclas atualmente pressionadas
         self.pontos = 0
         self.tempo_partida = 0.0
         self.alerta_timer = 0
@@ -339,6 +386,7 @@ class GameView(arcade.View):
         self.cooldown_dano2 = 0
 
     def setup(self):
+        self.teclas = set()
         self.pontos = 0
         self.tempo_partida = 0.0
         self.alerta_timer = 0
@@ -402,6 +450,9 @@ class GameView(arcade.View):
         self.inimigo_especial_lista = arcade.SpriteList()
         self.inimigo_especial_lista.append(InimigoEspecial())
 
+        # ---- Explosões (animações temporárias) ----
+        self.explosoes_lista = arcade.SpriteList()
+
         self.background = arcade.load_texture("tela_cenario_medieval.png")
 
     def on_show_view(self):
@@ -418,6 +469,7 @@ class GameView(arcade.View):
         self.inimigo_especial_lista.draw()
         self.sprite_jogador.draw()
         self.sprite_jogador2.draw()
+        self.explosoes_lista.draw()
 
         arcade.draw_text(f"Pontos: {self.pontos}", 10, ALTURA - 30,
                          arcade.color.WHITE, 20)
@@ -441,6 +493,7 @@ class GameView(arcade.View):
 
         self.moeda_especial_lista.update(delta_time)
         self.inimigos_lista.update(delta_time)
+        self.explosoes_lista.update(delta_time)
 
         # inimigo especial persegue o jogador mais próximo
         for inimigo_esp in self.inimigo_especial_lista:
@@ -470,6 +523,8 @@ class GameView(arcade.View):
                 self.pontos -= 1
                 self.alerta_timer = 1.0
                 self.cooldown_dano1 = 0.5
+                self.explosoes_lista.append(
+                    Explosao(self.personagem.center_x, self.personagem.center_y))
         else:
             self.cooldown_dano1 -= delta_time
 
@@ -478,6 +533,8 @@ class GameView(arcade.View):
                 self.pontos -= 1
                 self.alerta_timer = 1.0
                 self.cooldown_dano2 = 0.5
+                self.explosoes_lista.append(
+                    Explosao(self.personagem2.center_x, self.personagem2.center_y))
         else:
             self.cooldown_dano2 -= delta_time
 
@@ -485,6 +542,7 @@ class GameView(arcade.View):
         for jogador in (self.personagem, self.personagem2):
             for ie in arcade.check_for_collision_with_list(jogador, self.inimigo_especial_lista):
                 self.pontos -= 1
+                self.explosoes_lista.append(Explosao(jogador.center_x, jogador.center_y))
                 ie.reposicionar()
 
         if self.alerta_timer > 0:
@@ -494,20 +552,26 @@ class GameView(arcade.View):
         if len(self.moedas_lista) == 0 and len(self.moeda_especial_lista) == 0:
             self.window.show_view(GameOverView(self.pontos, self.tempo_partida))
 
+    def atualizar_movimento(self):
+        """Define change_x de cada jogador a partir das teclas que
+        ESTÃO pressionadas agora (resolve o conflito entre teclas)."""
+        # Jogador 1: A / D
+        dir1 = (arcade.key.D in self.teclas) - (arcade.key.A in self.teclas)
+        self.personagem.change_x = dir1 * self.velocidade
+
+        # Jogador 2: J / L
+        dir2 = (arcade.key.L in self.teclas) - (arcade.key.J in self.teclas)
+        self.personagem2.change_x = dir2 * self.velocidade
+
     def on_key_press(self, key, modifiers):
-        # Jogador 1: A / D andam, W pula (só se estiver no chão)
-        if key == arcade.key.D:
-            self.personagem.change_x = self.velocidade
-        if key == arcade.key.A:
-            self.personagem.change_x = -self.velocidade
+        self.teclas.add(key)
+        self.atualizar_movimento()
+
+        # Jogador 1: W pula (só se estiver no chão)
         if key == arcade.key.W and self.physics_engine1.can_jump():
             self.personagem.change_y = FORCA_PULO
 
-        # Jogador 2: L / J andam, I pula
-        if key == arcade.key.L:
-            self.personagem2.change_x = self.velocidade
-        if key == arcade.key.J:
-            self.personagem2.change_x = -self.velocidade
+        # Jogador 2: I pula
         if key == arcade.key.I and self.physics_engine2.can_jump():
             self.personagem2.change_y = FORCA_PULO
 
@@ -515,10 +579,8 @@ class GameView(arcade.View):
             self.window.show_view(MenuView())
 
     def on_key_release(self, key, modifiers):
-        if key in (arcade.key.D, arcade.key.A):
-            self.personagem.change_x = 0
-        if key in (arcade.key.L, arcade.key.J):
-            self.personagem2.change_x = 0
+        self.teclas.discard(key)
+        self.atualizar_movimento()
 
 
 # ============================================================
